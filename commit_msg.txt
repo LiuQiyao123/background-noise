@@ -1,10 +1,1 @@
-fix: 修复编码损坏 + 恢复短信登录页 + TS 类型错误
-
-- CreateMemoryPage: 修复 PowerShell 批量替换导致的编码损坏(11处)
-  - 恢复缺失的闭合标签 `</p>` `</span>`
-  - 恢复损坏的三元运算符 `…`
-  - 修复未闭合的 placeholder 字符串
-  - 移除未使用的 revokeLocalUrl
-- LoginPage: 恢复短信验证码登录版本(被 git checkout 覆盖丢失)
-- torn-paper: 移除未使用的 rough 参数
-- ShowCard: 添加可选链修复 TS strict 类型错误
+fix: serve.js 添加 Cache-Control 防止 Cloudflare 缓存 HTML

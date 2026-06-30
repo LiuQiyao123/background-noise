@@ -29,6 +29,13 @@ const MIME = {
 
 function serveStatic(res, filePath) {
   const ext = path.extname(filePath);
+  const isHtml = ext === '.html';
+  const headers = {
+    'Content-Type': MIME[ext] || 'application/octet-stream',
+  };
+  if (isHtml) {
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+  }
   fs.readFile(filePath, (err, data) => {
     if (err) {
       // SPA: 如果文件不存在，返回 index.html（支持前端路由）
@@ -39,12 +46,15 @@ function serveStatic(res, filePath) {
           res.end('Not Found');
           return;
         }
-        res.writeHead(200, { 'Content-Type': 'text/html;charset=utf-8' });
+        res.writeHead(200, {
+          'Content-Type': 'text/html;charset=utf-8',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        });
         res.end(indexData);
       });
       return;
     }
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    res.writeHead(200, headers);
     res.end(data);
   });
 }
