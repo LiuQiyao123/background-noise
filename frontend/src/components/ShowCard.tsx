@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import type { Show } from '../api/types';
 
 function formatDate(iso: string) {
@@ -53,16 +52,16 @@ export function ShowCard({ show }: { show: Show }) {
           {formatDate(show.showDate)} · {show.venueName}
           {show.city ? ` · ${show.city}` : ''}
         </p>
-        {show.stats?.publicRepoCount > 0 && (
+        {(show.stats?.publicRepoCount ?? 0) > 0 && (
           <p className="mt-1 text-xs text-text-dim">
-            🎸 {show.stats.publicRepoCount} 条现场记录
-            {show.stats.avgVibe.band ? ` · ⭐ ${show.stats.avgVibe.band.toFixed(1)}` : ''}
+            🎸 {show.stats?.publicRepoCount} 条现场记录
+            {show.stats?.avgVibe?.band ? ` · ⭐ ${show.stats.avgVibe.band.toFixed(1)}` : ''}
           </p>
         )}
       </div>
-      {show.stats?.publicRepoCount > 0 && (
+      {(show.stats?.publicRepoCount ?? 0) > 0 && (
         <span className="shrink-0 inline-flex items-center rounded-full bg-muted/30 px-2 py-0.5 text-[10px]">
-          {show.stats.publicRepoCount} 条
+          {show.stats?.publicRepoCount} 条
         </span>
       )}
     </Link>

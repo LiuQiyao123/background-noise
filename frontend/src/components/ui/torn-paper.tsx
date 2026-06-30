@@ -20,7 +20,6 @@ interface TornPaperShapeProps {
   fill?: boolean;
   stroke?: boolean;
   clip?: boolean;
-  rough?: boolean;
 }
 
 function generateTornPath(
@@ -29,9 +28,8 @@ function generateTornPath(
   seed: number,
   jagAmplitude: number,
   jagFrequency: number,
-  rough: boolean,
 ): string {
-  return tornPaperPath(width, height, seed, jagAmplitude, jagFrequency, rough);
+  return tornPaperPath(width, height, seed, jagAmplitude, jagFrequency);
 }
 
 export const TornPaperShape: FC<TornPaperShapeProps> = ({
@@ -43,13 +41,12 @@ export const TornPaperShape: FC<TornPaperShapeProps> = ({
   fill: _isFill,
   stroke: isStroke,
   clip: isClip,
-  rough = true,
 }) => {
   const mode: 'fill' | 'stroke' | 'clip' = isClip ? 'clip' : isStroke ? 'stroke' : 'fill';
   const uniqueId = `torn-paper-${seed}-${jagAmplitude}-${jagFrequency}`;
   const w = 400;
   const h = 400;
-  const path = generateTornPath(w, h, seed, jagAmplitude, jagFrequency, rough);
+  const path = generateTornPath(w, h, seed, jagAmplitude, jagFrequency);
 
   if (mode === 'clip') {
     return (
@@ -104,7 +101,6 @@ interface TornPaperCardProps {
   children: ReactNode;
   className?: string;
   dark?: boolean;
-  rough?: boolean;
 }
 
 export const TornPaperCard: FC<TornPaperCardProps> = ({
@@ -114,12 +110,11 @@ export const TornPaperCard: FC<TornPaperCardProps> = ({
   children,
   className,
   dark = false,
-  rough = true,
 }) => {
   const uniqueId = `torn-card-${seed}`;
   const w = 400;
   const h = 400;
-  const path = tornPaperPath(w, h, seed, jagAmplitude, jagFrequency, rough);
+  const path = tornPaperPath(w, h, seed, jagAmplitude, jagFrequency);
 
   return (
     <div

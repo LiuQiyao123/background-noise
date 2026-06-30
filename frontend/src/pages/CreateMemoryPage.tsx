@@ -22,12 +22,6 @@ function createLocalUrl(file: File): string {
   try { return URL.createObjectURL(file); } catch { return ''; }
 }
 
-function revokeLocalUrl(url: string) {
-  if (url.startsWith('blob:')) {
-    try { URL.revokeObjectURL(url); } catch { /* safe */ }
-  }
-}
-
 /* ────────────── step names ────────────── */
 
 type Step = 'show-select' | 'media-pick' | 'express' | 'publish';
@@ -370,7 +364,7 @@ function ExpressionInput({
         className="min-h-[160px] w-full resize-none rounded-xl border border-concrete/40 bg-white px-4 py-3 text-sm leading-relaxed text-ink outline-none placeholder:text-concrete-dark/50 focus:border-concrete-dark"
         value={text}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="说说当时的感觉…?
+        placeholder="说说当时的感觉…"
         autoFocus
       />
 
@@ -393,7 +387,7 @@ function ExpressionInput({
         )}
       >
         <Mic className={cn('h-4 w-4', recording && 'animate-pulse')} />
-        {recording ? '录音中?..点击停止' : '录音'}
+        {recording ? '录音中..点击停止' : '录音'}
       </button>
 
       <div className="mt-auto pb-6">
@@ -452,8 +446,8 @@ function PublishStep({
       {/* Summary card */}
       <div className="mb-6 rounded-xl bg-card px-4 py-3 ring-1 ring-ink/5">
         <div className="mb-2 flex gap-2 text-xs text-concrete-dark">
-          <span>{media.length} 个媒体文件?/span>
-          {text && <span className="truncate">· {text.slice(0, 40)}{text.length > 40 ? ' : ''}</span>}
+          <span>{media.length} 个媒体文件</span>
+          {text && <span className="truncate">· {text.slice(0, 40)}{text.length > 40 ? '…' : ''}</span>}
         </div>
 
         {/* Media thumbnails */}
@@ -545,7 +539,7 @@ function ShowSelector({ onSelect }: { onSelect: (id: string) => void }) {
   return (
     <div className="flex min-h-dvh flex-col bg-bone px-4 pt-6">
       <h2 className="mb-1 font-serif text-lg font-black text-ink">选择演出</h2>
-      <p className="mb-4 text-xs text-concrete-dark">先选一场演出，再写下你的记忆?/p>
+      <p className="mb-4 text-xs text-concrete-dark">先选一场演出，再写下你的记忆</p>
 
       {/* Search */}
       <div className="relative mb-4">
@@ -572,7 +566,7 @@ function ShowSelector({ onSelect }: { onSelect: (id: string) => void }) {
         <p className="py-8 text-center text-xs text-concrete-dark">加载演出...</p>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8">
-          <p className="text-sm text-concrete-dark">{query ? '没有找到匹配的演出? : '暂无演出数据'}</p>
+          <p className="text-sm text-concrete-dark">{query ? '没有找到匹配的演出' : '暂无演出数据'}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
