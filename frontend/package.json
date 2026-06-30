@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource-variable/noto-sans-sc": "^5.2.10",
+    "@fontsource-variable/noto-serif-sc": "^5.2.10",
+    "@fontsource-variable/playfair-display": "^5.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",

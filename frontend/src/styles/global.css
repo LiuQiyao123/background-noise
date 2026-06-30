@@ -7,6 +7,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* ── 自托管字体（fontsource，不依赖 Google CDN）── */
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/playfair-display";
+@import "@fontsource-variable/noto-sans-sc";
+@import "@fontsource-variable/noto-serif-sc";
+
 /* ══════════════════════════════
    BNTheme Design Tokens
    ══════════════════════════════ */

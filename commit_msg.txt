@@ -1,1 +1,12 @@
-fix: serve.js 添加 Cache-Control 防止 Cloudflare 缓存 HTML
+feat: 创建 iOS 原生 SwiftUI 应用 + 字体改为自托管
+
+- 新增 bnoise-ios/ 目录，SwiftUI iOS 17+ 原生应用
+  - 设计系统：bone/ink 配色，Playfair Display 标题，DM Sans 正文
+  - 页面：Splash → Live/Discover/Record/Profile 主页 + ShowDetail
+  - 组件：TicketStubCard、PaperGrain、StampLabel、VibeRating、BarcodeStrip
+  - 网络层：APIClient 连接后端 API
+- 字体：从 Google Fonts CDN 改为 fontsource npm 包自托管
+  - DM Sans / Playfair Display / Noto Sans SC / Noto Serif SC
+  - 所有字体文件随构建打包，不依赖外网 CDN
+- 修复 serve.js Cache-Control 头防止 Cloudflare 缓存
+- 修复多条编码损坏和 TS 类型错误
