@@ -7,102 +7,119 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// 用户默认可见性
-enum DefaultVisibility {
-  PRIVATE        /// 仅自己
-  PUBLIC_TO_SHOW /// 公开到演出条目
-}
-
-/// Repo 现场记录可见性
-enum RepoVisibility {
-  PRIVATE /// 仅自己
-  PUBLIC  /// 公开到条目记忆墙
-}
-
-/// 用户对演出的兴趣类型
-enum ShowInterestType {
-  WANT_TO_SEE /// 想看
-  ATTENDED    /// 看过
-}
-
-/// 媒体文件类型
-enum MediaType {
-  IMAGE /// 图片
-  VIDEO /// 视频
-}
-
-/// 举报目标类型
-enum ReportTargetType {
-  REPO    /// 举报现场记录
-  COMMENT /// 举报评论
-  USER    /// 举报用户
-}
-
-/// 举报处理状态
-enum ReportStatus {
-  PENDING  /// 待处理
-  RESOLVED /// 已解决
-  REJECTED /// 已驳回
-}
-
-/// 匹配状态
-enum MatchStatus {
-  PENDING   /// 待处理（用户尚未回应）
-  CONNECTED /// 已建立连接
-  DISMISSED /// 已忽略
-}
-
 /// 用户账号
 model User {
-  id                String            @id @default(cuid())  /// 用户ID
-  phone             String            @unique               /// 手机号（登录凭证）
-  passwordHash      String                                  /// bcrypt 密码哈希
-  nickname          String                                  /// 昵称
-  avatarUrl         String?                                 /// 头像URL
-  defaultVisibility DefaultVisibility @default(PRIVATE)     /// 新记录默认可见性
-  createdAt         DateTime          @default(now())       /// 注册时间
-  updatedAt         DateTime          @updatedAt            /// 最后更新时间
+  /// 用户ID
+  id                String            @id @default(cuid())
+  /// 手机号（登录凭证）
+  phone             String            @unique
+  /// bcrypt 密码哈希
+  passwordHash      String
+  /// 昵称
+  nickname          String
+  /// 头像URL
+  avatarUrl         String?
+  /// 新记录默认可见性
+  defaultVisibility DefaultVisibility @default(PRIVATE)
+  /// 注册时间
+  createdAt         DateTime          @default(now())
+  /// 最后更新时间
+  updatedAt         DateTime          @updatedAt
+  comments          Comment[]
+  matchesB          Match[]           @relation("MatchUserB")
+  matchesA          Match[]           @relation("MatchUserA")
+  memoryHookLikes   MemoryHookLike[]
+  repos             Repo[]
+  repoLikes         RepoLike[]
+  reportsFiled      Report[]          @relation("Reporter")
+  showInterests     ShowInterest[]
+  blockedBy         UserBlock[]       @relation("Blocked")
+  blockedUsers      UserBlock[]       @relation("Blocker")
+  memories          Memory[]
+}
 
-  repos         Repo[]        /// 发布的现场记录
-  showInterests ShowInterest[] /// 对演出的兴趣标记
-  repoLikes     RepoLike[]    /// 收到的点赞
-  comments      Comment[]     /// 发布的评论
-  reportsFiled  Report[]      @relation("Reporter") /// 发起的举报
-  blockedUsers  UserBlock[]   @relation("Blocker")  /// 拉黑的用户
-  blockedBy     UserBlock[]   @relation("Blocked")  /// 被谁拉黑
-  memoryHookLikes MemoryHookLike[] /// 一句话记忆收到的点赞
-  matchesA        Match[]          @relation("MatchUserA") /// 作为A的匹配
-  matchesB        Match[]          @relation("MatchUserB") /// 作为B的匹配
+/// 现场记忆（轻量情绪快照）
+model Memory {
+  /// 记忆ID
+  id         String          @id @default(cuid())
+  /// 发布者
+  userId     String
+  /// 绑定的演出
+  showId     String
+  /// 文字内容（无字数/格式限制）
+  text       String?
+  /// 可见性
+  visibility RepoVisibility  @default(PUBLIC)
+  /// 发布时间
+  createdAt  DateTime        @default(now())
+  /// 关联
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  show       Show            @relation(fields: [showId], references: [id], onDelete: Cascade)
+  media      MemoryMedia[]
+
+  @@unique([userId, showId])
+  @@index([showId, visibility])
+}
+
+/// 记忆媒体（照片/视频/录音）
+model MemoryMedia {
+  /// 媒体ID
+  id         String    @id @default(cuid())
+  /// 所属记忆
+  memoryId   String
+  /// 文件访问URL
+  url        String
+  /// 文件类型
+  type       MediaType @default(IMAGE)
+  /// 排序序号
+  sortOrder  Int       @default(0)
+  /// 上传时间
+  createdAt  DateTime  @default(now())
+  /// 关联
+  memory     Memory    @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
 }
 
 /// 用户拉黑关系（A拉黑B后，双方互不可见）
 model UserBlock {
-  id        String   @id @default(cuid())  /// 关系ID
-  blockerId String                        /// 拉黑者ID
-  blockedId String                        /// 被拉黑者ID
-  createdAt DateTime @default(now())      /// 拉黑时间
+  /// 关系ID
+  id        String   @id @default(cuid())
+  /// 拉黑者ID
+  blockerId String
+  /// 被拉黑者ID
+  blockedId String
+  /// 拉黑时间
+  createdAt DateTime @default(now())
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
 
-  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
-  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
-
-  @@unique([blockerId, blockedId]) /// 同一对用户只能有一条拉黑关系
+  @@unique([blockerId, blockedId])
   @@index([blockerId])
 }
 
 /// 演出条目（唯一约束：同一艺人同一天同一场馆不重复）
 model Show {
-  id          String   @id @default(cuid())  /// 演出ID
-  artistName  String                        /// 艺人/乐队名
-  venueName   String                        /// 场馆名（如 MAO Livehouse）
-  showDate    DateTime                      /// 演出日期时间
-  city        String?                       /// 城市
-  description String?                       /// 描述/备注
-  createdAt   DateTime @default(now())      /// 创建时间
-  updatedAt   DateTime @updatedAt           /// 最后更新时间
-
-  repos     Repo[]         /// 关联的现场记录
-  interests ShowInterest[] /// 用户兴趣标记
-  matches   Match[]        /// 关联的匹配记录
+  /// 演出ID
+  id          String         @id @default(cuid())
+  /// 艺人/乐队名
+  artistName  String
+  /// 场馆名（如 MAO Livehouse）
+  venueName   String
+  /// 演出日期时间
+  showDate    DateTime
+  /// 城市
+  city        String?
+  /// 描述/备注
+  description String?
+  /// 创建时间
+  createdAt   DateTime       @default(now())
+  /// 最后更新时间
+  updatedAt   DateTime       @updatedAt
+  matches     Match[]
+  repos       Repo[]
+  interests   ShowInterest[]
+  memories    Memory[]
 
   @@unique([artistName, venueName, showDate])
   @@index([showDate])
@@ -112,43 +129,61 @@ model Show {
 
 /// 用户对演出的兴趣标记（想看/看过）
 model ShowInterest {
-  id        String           @id @default(cuid())  /// 关系ID
-  userId    String                                 /// 用户ID
-  showId    String                                 /// 演出ID
-  type      ShowInterestType                       /// 兴趣类型
-  createdAt DateTime         @default(now())       /// 标记时间
+  /// 关系ID
+  id        String           @id @default(cuid())
+  /// 用户ID
+  userId    String
+  /// 演出ID
+  showId    String
+  /// 兴趣类型
+  type      ShowInterestType
+  /// 标记时间
+  createdAt DateTime         @default(now())
+  show      Show             @relation(fields: [showId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  show Show @relation(fields: [showId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, showId, type]) /// 同一用户对同一演出只能标记一次同类型
+  @@unique([userId, showId, type])
   @@index([showId, type])
 }
 
 /// 现场记录（Repo）—— 用户为某场演出写的记忆
 model Repo {
-  id                  String         @id @default(cuid())  /// 记录ID
-  userId              String                               /// 作者ID
-  showId              String                               /// 所属演出ID
-  body                String?                              /// 正文内容（可选）
-  memoryHook          String                               /// 一句话记忆（必填，≤20字）
-  memoryTemplate      String?                              /// 记忆模板类型 A/B/C/D
-  memoryHookLikeCount Int            @default(0)           /// 记忆点赞数（冗余计数器）
-  vibeBand            Int                                  /// 乐队表现评分 1-5
-  vibeSound           Int                                  /// 音响效果评分 1-5
-  vibeAtmosphere      Int                                  /// 现场氛围评分 1-5
-  visibility          RepoVisibility @default(PRIVATE)     /// 可见性（默认仅自己）
-  likeCount           Int            @default(0)           /// 点赞数（冗余计数器）
-  commentCount        Int            @default(0)           /// 评论数（冗余计数器）
-  createdAt           DateTime       @default(now())       /// 发布时间
-  updatedAt           DateTime       @updatedAt            /// 最后修改时间
-
-  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  show     Show        @relation(fields: [showId], references: [id], onDelete: Cascade)
-  media    RepoMedia[] /// 关联的图片/视频
-  likes    RepoLike[]  /// 收到的点赞
-  comments Comment[]   /// 收到的评论
-  memoryHookLikes MemoryHookLike[] /// 一句话记忆点赞
+  /// 记录ID
+  id                  String           @id @default(cuid())
+  /// 作者ID
+  userId              String
+  /// 所属演出ID
+  showId              String
+  /// 正文内容（可选）
+  body                String?
+  /// 一句话记忆（必填，≤20字）
+  memoryHook          String
+  /// 记忆模板类型 A/B/C/D
+  memoryTemplate      String?
+  /// 记忆点赞数（冗余计数器）
+  memoryHookLikeCount Int              @default(0)
+  /// 乐队表现评分 1-5
+  vibeBand            Int
+  /// 音响效果评分 1-5
+  vibeSound           Int
+  /// 现场氛围评分 1-5
+  vibeAtmosphere      Int
+  /// 可见性（默认仅自己）
+  visibility          RepoVisibility   @default(PRIVATE)
+  /// 点赞数（冗余计数器）
+  likeCount           Int              @default(0)
+  /// 评论数（冗余计数器）
+  commentCount        Int              @default(0)
+  /// 发布时间
+  createdAt           DateTime         @default(now())
+  /// 最后修改时间
+  updatedAt           DateTime         @updatedAt
+  comments            Comment[]
+  memoryHookLikes     MemoryHookLike[]
+  show                Show             @relation(fields: [showId], references: [id], onDelete: Cascade)
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes               RepoLike[]
+  media               RepoMedia[]
 
   @@index([userId, createdAt])
   @@index([showId, visibility, createdAt])
@@ -158,61 +193,79 @@ model Repo {
 
 /// Repo 关联的媒体文件
 model RepoMedia {
-  id        String    @id @default(cuid())  /// 媒体ID
-  repoId    String                          /// 所属RepoID
-  url       String                          /// 文件访问URL
-  type      MediaType @default(IMAGE)       /// 文件类型
-  tags      String    @default("[]")        /// 照片标签 JSON 数组
-  sortOrder Int       @default(0)           /// 排列序号（从小到大）
-  createdAt DateTime  @default(now())       /// 上传时间
-
-  repo Repo @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  /// 媒体ID
+  id        String    @id @default(cuid())
+  /// 所属RepoID
+  repoId    String
+  /// 文件访问URL
+  url       String
+  /// 文件类型
+  type      MediaType @default(IMAGE)
+  /// 照片标签 JSON 数组
+  tags      String    @default("[]")
+  /// 排列序号（从小到大）
+  sortOrder Int       @default(0)
+  /// 上传时间
+  createdAt DateTime  @default(now())
+  repo      Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
 
   @@index([repoId])
 }
 
 /// 点赞记录
 model RepoLike {
-  id        String   @id @default(cuid())  /// 点赞ID
-  userId    String                         /// 点赞者ID
-  repoId    String                         /// 被点赞的RepoID
-  createdAt DateTime @default(now())       /// 点赞时间
+  /// 点赞ID
+  id        String   @id @default(cuid())
+  /// 点赞者ID
+  userId    String
+  /// 被点赞的RepoID
+  repoId    String
+  /// 点赞时间
+  createdAt DateTime @default(now())
+  repo      Repo     @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  repo Repo @relation(fields: [repoId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, repoId]) /// 一人对同一Repo只能点一次赞
+  @@unique([userId, repoId])
   @@index([repoId])
 }
 
 /// 一句话记忆点赞
 model MemoryHookLike {
-  id        String   @id @default(cuid())  /// 点赞ID
-  userId    String                         /// 点赞者ID
-  repoId    String                         /// 被点赞的RepoID
-  createdAt DateTime @default(now())       /// 点赞时间
+  /// 点赞ID
+  id        String   @id @default(cuid())
+  /// 点赞者ID
+  userId    String
+  /// 被点赞的RepoID
+  repoId    String
+  /// 点赞时间
+  createdAt DateTime @default(now())
+  repo      Repo     @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  repo Repo @relation(fields: [repoId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, repoId]) /// 一人对同一Repo的记忆只能点一次赞
+  @@unique([userId, repoId])
   @@index([repoId])
 }
 
 /// 评论
 model Comment {
-  id        String    @id @default(cuid())  /// 评论ID
-  repoId    String                          /// 所属RepoID
-  userId    String                          /// 评论者ID
-  body      String                          /// 评论内容
-  parentId  String?                         /// 回复目标评论ID（null=直接评论）
-  createdAt DateTime  @default(now())       /// 评论时间
-  updatedAt DateTime  @updatedAt            /// 最后修改时间
-
-  repo   Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
-  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent Comment?  @relation("CommentReply", fields: [parentId], references: [id], onDelete: SetNull)
-  replies Comment[] @relation("CommentReply")
+  /// 评论ID
+  id        String    @id @default(cuid())
+  /// 所属RepoID
+  repoId    String
+  /// 评论者ID
+  userId    String
+  /// 评论内容
+  body      String
+  /// 回复目标评论ID（null=直接评论）
+  parentId  String?
+  /// 评论时间
+  createdAt DateTime  @default(now())
+  /// 最后修改时间
+  updatedAt DateTime  @updatedAt
+  parent    Comment?  @relation("CommentReply", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReply")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repo      Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
 
   @@index([repoId, createdAt])
   @@index([parentId])
@@ -220,16 +273,23 @@ model Comment {
 
 /// 举报记录
 model Report {
-  id         String           @id @default(cuid())  /// 举报ID
-  reporterId String                                /// 举报人ID
-  targetType ReportTargetType                       /// 举报目标类型
-  targetId   String                                /// 举报目标ID
-  reason     String                                /// 举报原因
-  status     ReportStatus     @default(PENDING)     /// 处理状态
-  createdAt  DateTime         @default(now())       /// 举报时间
-  updatedAt  DateTime         @updatedAt            /// 最后处理时间
-
-  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  /// 举报ID
+  id         String           @id @default(cuid())
+  /// 举报人ID
+  reporterId String
+  /// 举报目标类型
+  targetType ReportTargetType
+  /// 举报目标ID
+  targetId   String
+  /// 举报原因
+  reason     String
+  /// 处理状态
+  status     ReportStatus     @default(PENDING)
+  /// 举报时间
+  createdAt  DateTime         @default(now())
+  /// 最后处理时间
+  updatedAt  DateTime         @updatedAt
+  reporter   User             @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([targetType, targetId])
@@ -237,38 +297,120 @@ model Report {
 
 /// 上传文件资产（记录上传文件元信息）
 model MediaAsset {
-  id           String   @id @default(cuid())  /// 资产ID
-  uploaderId   String                         /// 上传者ID
-  originalName String                         /// 原始文件名
-  mimeType     String                         /// MIME类型（如 image/jpeg）
-  sizeBytes    Int                            /// 文件大小（字节）
-  storagePath  String                         /// 本地存储路径
-  publicUrl    String                         /// 公开访问URL
-  createdAt    DateTime @default(now())       /// 上传时间
+  /// 资产ID
+  id           String   @id @default(cuid())
+  /// 上传者ID
+  uploaderId   String
+  /// 原始文件名
+  originalName String
+  /// MIME类型（如 image/jpeg）
+  mimeType     String
+  /// 文件大小（字节）
+  sizeBytes    Int
+  /// 本地存储路径
+  storagePath  String
+  /// 公开访问URL
+  publicUrl    String
+  /// 上传时间
+  createdAt    DateTime @default(now())
 
   @@index([uploaderId])
 }
 
 /// 共同记忆匹配记录
 model Match {
-  id              String      @id @default(cuid())  /// 匹配ID
-  userAId         String                            /// 用户A
-  userBId         String                            /// 用户B
-  showId          String                            /// 撞上的演出ID
-  matchLevel      Int                               /// 匹配层级 1/2/3
-  similarityScore Float?                            /// 审美重合度 (0-100)
-  memoryHookA     String?                           /// A的一句话记忆
-  memoryHookB     String?                           /// B的一句话记忆
-  matchedAt       DateTime    @default(now())       /// 匹配时间
-  lastSeenAt      DateTime?                         /// A最近查看时间（盲盒用）
-  status          MatchStatus @default(PENDING)     /// 状态
+  /// 匹配ID
+  id              String      @id @default(cuid())
+  /// 用户A
+  userAId         String
+  /// 用户B
+  userBId         String
+  /// 撞上的演出ID
+  showId          String
+  /// 匹配层级 1/2/3
+  matchLevel      Int
+  /// 审美重合度 (0-100)
+  similarityScore Float?
+  /// A的一句话记忆
+  memoryHookA     String?
+  /// B的一句话记忆
+  memoryHookB     String?
+  /// 匹配时间
+  matchedAt       DateTime    @default(now())
+  /// A最近查看时间（盲盒用）
+  lastSeenAt      DateTime?
+  /// 状态
+  status          MatchStatus @default(PENDING)
+  show            Show        @relation(fields: [showId], references: [id], onDelete: Cascade)
+  userB           User        @relation("MatchUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  userA           User        @relation("MatchUserA", fields: [userAId], references: [id], onDelete: Cascade)
 
-  userA User @relation("MatchUserA", fields: [userAId], references: [id], onDelete: Cascade)
-  userB User @relation("MatchUserB", fields: [userBId], references: [id], onDelete: Cascade)
-  show  Show @relation(fields: [showId], references: [id], onDelete: Cascade)
-
-  @@unique([userAId, userBId, showId]) /// 同一演出两人不重复匹配
+  @@unique([userAId, userBId, showId])
   @@index([userAId, status])
   @@index([userBId, status])
   @@index([showId])
+}
+
+/// 用户默认可见性
+enum DefaultVisibility {
+  /// 仅自己
+  PRIVATE
+  /// 公开到演出条目
+  PUBLIC_TO_SHOW
+}
+
+/// Repo 现场记录可见性
+enum RepoVisibility {
+  /// 仅自己
+  PRIVATE
+  /// 公开到条目记忆墙
+  PUBLIC
+}
+
+/// 用户对演出的兴趣类型
+enum ShowInterestType {
+  /// 想看
+  WANT_TO_SEE
+  /// 看过
+  ATTENDED
+}
+
+/// 媒体文件类型
+enum MediaType {
+  /// 图片
+  IMAGE
+  /// 视频
+  VIDEO
+  /// 录音
+  AUDIO
+}
+
+/// 举报目标类型
+enum ReportTargetType {
+  /// 举报现场记录
+  REPO
+  /// 举报评论
+  COMMENT
+  /// 举报用户
+  USER
+}
+
+/// 举报处理状态
+enum ReportStatus {
+  /// 待处理
+  PENDING
+  /// 已解决
+  RESOLVED
+  /// 已驳回
+  REJECTED
+}
+
+/// 匹配状态
+enum MatchStatus {
+  /// 待处理（用户尚未回应）
+  PENDING
+  /// 已建立连接
+  CONNECTED
+  /// 已忽略
+  DISMISSED
 }

@@ -1,10 +1,18 @@
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import type { Repo } from '../api/types';
 
 function PrivacyBadge({ visibility }: { visibility: 'PRIVATE' | 'PUBLIC' }) {
   return (
-    <span className={`privacy-badge privacy-badge--${visibility === 'PRIVATE' ? 'private' : 'public'}`}>
-      {visibility === 'PRIVATE' ? '\ud83d\udd12 仅自己' : '\u2705 已公开'}
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium',
+        visibility === 'PRIVATE'
+          ? 'bg-concrete/20 text-concrete-dark'
+          : 'bg-highlight/15 text-highlight/80',
+      )}
+    >
+      {visibility === 'PRIVATE' ? '🔒 仅自己' : '✅ 已公开'}
     </span>
   );
 }
@@ -13,53 +21,32 @@ export function RepoCard({ repo, compact }: { repo: Repo; compact?: boolean }) {
   return (
     <Link
       to={`/repos/${repo.id}`}
-      className="card"
-      style={repo.visibility === 'PRIVATE' ? { opacity: 0.85 } : undefined}
+      className={cn(
+        'flex flex-col gap-1.5 rounded-xl bg-card px-4 py-3 ring-1 ring-ink/5',
+        repo.visibility === 'PRIVATE' && 'opacity-85',
+      )}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: 6,
-        }}
-      >
-        <p
-          style={{
-            fontWeight: 600,
-            fontSize: 'var(--font-size-memory)',
-            lineHeight: 'var(--line-height-tight)',
-            flex: 1,
-          }}
-        >
+      <div className="flex items-start justify-between gap-2">
+        <p className="flex-1 text-sm font-semibold leading-tight">
           「{repo.memoryHook}」
         </p>
         {repo.visibility === 'PRIVATE' && <PrivacyBadge visibility="PRIVATE" />}
       </div>
       {repo.body && !compact && (
-        <p
-          style={{
-            fontSize: 'var(--font-size-body)',
-            color: 'var(--text-muted)',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
+        <p className="line-clamp-2 text-sm text-text-muted">
           {repo.body}
         </p>
       )}
-      <p className="repo-meta">
+      <p className="text-xs text-text-muted">
         {repo.user?.nickname ?? '乐迷'}
-        {' · '}❤ {repo.likeCount}
-        {' · '}💬 {repo.commentCount}
+        {' · ❤ '}{repo.likeCount}
+        {' · 💬 '}{repo.commentCount}
         {repo.visibility === 'PUBLIC' && repo.memoryHookLikeCount !== undefined && repo.memoryHookLikeCount > 0 && (
-          <span style={{ marginLeft: 8 }}>
-            🔥 {repo.memoryHookLikeCount}
-          </span>
+          <span className="ml-2">🔥 {repo.memoryHookLikeCount}</span>
         )}
-        {repo.visibility === 'PUBLIC' && <span style={{ marginLeft: 8 }}><PrivacyBadge visibility="PUBLIC" /></span>}
+        {repo.visibility === 'PUBLIC' && (
+          <span className="ml-2"><PrivacyBadge visibility="PUBLIC" /></span>
+        )}
       </p>
     </Link>
   );

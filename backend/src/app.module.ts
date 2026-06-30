@@ -7,6 +7,7 @@ import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { MatchesModule } from './matches/matches.module';
 import { MediaModule } from './media/media.module';
+import { MemoryModule } from './memory/memory.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { DiscoverModule } from './discover/discover.module';
 import { ReportsModule } from './reports/reports.module';
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     ReportsModule,
     DiscoverModule,
     MatchesModule,
+    MemoryModule,
     AiModule,
   ],
 })

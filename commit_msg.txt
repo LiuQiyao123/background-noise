@@ -1,0 +1,10 @@
+feat(frontend): 字体系统 & 通用组件改造
+
+- 字体: Geist Variable -> DM Sans(正文) + Playfair Display(标题)
+- 新增 font-heading token, Noto Serif SC 中文标题字体
+- Button: 重写为品牌色系 (ink/bone/stamp/highlight), 5种变体
+- Input/Textarea: 统一品牌风格 (bg-bone/50, border-concrete)
+- Card: 新增 size=ticket 模式, 品牌色系
+- BrandLogo: 字体同步更新
+- 全局样式: 清理旧 fontsource 依赖, 更新设计 tokens
+- CreateMemoryPage: 修复编码损坏

@@ -129,9 +129,9 @@ function BrandLogoInner({ size = 48, variant = 'full', animated = true }: BrandL
       <text
         x={52}
         y={28}
-        fontFamily="'Noto Sans SC', 'PingFang SC', system-ui, sans-serif"
+        fontFamily="'Noto Serif SC', 'Noto Sans SC', system-ui, sans-serif"
         fontSize={24}
-        fontWeight={800}
+        fontWeight={900}
         fill="url(#logo-grad-full)"
         letterSpacing={2}
       >
@@ -142,11 +142,11 @@ function BrandLogoInner({ size = 48, variant = 'full', animated = true }: BrandL
       <text
         x={52}
         y={42}
-        fontFamily="'DM Sans', 'Segoe UI', sans-serif"
+        fontFamily="'DM Sans', 'Inter', sans-serif"
         fontSize={9}
-        fontWeight={500}
+        fontWeight={600}
         fill="#8b8b96"
-        letterSpacing={3}
+        letterSpacing={4}
       >
         BACKGROUND NOISE
       </text>

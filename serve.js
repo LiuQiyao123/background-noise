@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 3004;
-const API_PORT = 3005;
+const API_PORT = 3002;
 const FRONTEND_DIR = path.join(__dirname, 'frontend', 'dist');
 
 // MIME types
@@ -89,7 +89,7 @@ const server = http.createServer((req, res) => {
   serveStatic(res, filePath);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 Background Noise 服务已启动: http://127.0.0.1:${PORT}`);
   console.log(`   静态文件: ${FRONTEND_DIR}`);
   console.log(`   API 代理 → 127.0.0.1:${API_PORT}`);

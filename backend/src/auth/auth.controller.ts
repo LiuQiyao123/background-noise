@@ -3,8 +3,10 @@ import { AuthUser, CurrentUser } from '../common/decorators/current-user.decorat
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
+import { LoginByCodeDto } from './dto/login-by-code.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { SendCodeDto } from './dto/send-code.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +23,16 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
+  }
+
+  @Post('send-code')
+  sendCode(@Body() dto: SendCodeDto) {
+    return this.auth.sendCode(dto);
+  }
+
+  @Post('login-by-code')
+  loginByCode(@Body() dto: LoginByCodeDto) {
+    return this.auth.loginByCode(dto);
   }
 
   @Get('me')

@@ -117,6 +117,7 @@ export interface UserStats {
 export interface AuthResponse {
   user: User;
   accessToken: string;
+  isNewUser?: boolean;
 }
 
 // ─── v0.2 新类型 ───
